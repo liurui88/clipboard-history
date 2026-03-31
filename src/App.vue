@@ -5,6 +5,10 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { writeText, writeImage } from '@tauri-apps/plugin-clipboard-manager'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 
+// Detect platform
+const isMac = navigator.platform.toLowerCase().includes('mac')
+const shortcutText = isMac ? 'Cmd + Shift + V' : 'Ctrl + Shift + V'
+
 interface ClipboardItem {
   id: string
   content_type: 'Text' | 'Image'
@@ -17,13 +21,22 @@ interface ClipboardItem {
 const items = ref<ClipboardItem[]>([])
 const copiedId = ref<string | null>(null)
 const searchQuery = ref('')
+const activeFilter = ref<'all' | 'text' | 'image'>('all')
 const showScrollTop = ref(false)
 const scrollContainer = ref<HTMLElement | null>(null)
 let unlisten: UnlistenFn | null = null
 
 onMounted(async () => {
   await loadHistory()
-  unlisten = await listen('clipboard-updated', loadHistory)
+  try {
+    unlisten = await listen('clipboard-updated', (event) => {
+      console.log('Clipboard updated event received:', event)
+      loadHistory()
+    })
+    console.log('Event listener registered successfully')
+  } catch (e) {
+    console.error('Failed to register event listener:', e)
+  }
   
   // Add scroll listener
   if (scrollContainer.value) {
@@ -52,8 +65,11 @@ function scrollToTop() {
 
 async function loadHistory() {
   try {
+    console.log('Loading history...')
     const history = await invoke<ClipboardItem[]>('get_clipboard_history')
+    console.log('History loaded:', history)
     items.value = history
+    console.log('Items updated:', items.value)
   } catch (e) {
     console.error('Failed to load history:', e)
   }
@@ -61,6 +77,15 @@ async function loadHistory() {
 
 const filteredItems = computed(() => {
   let result = items.value
+  
+  // Type filter
+  if (activeFilter.value !== 'all') {
+    result = result.filter(item => {
+      if (activeFilter.value === 'text') return item.content_type === 'Text'
+      if (activeFilter.value === 'image') return item.content_type === 'Image'
+      return true
+    })
+  }
   
   // Search filter
   if (searchQuery.value.trim()) {
@@ -206,6 +231,42 @@ async function hideWindow() {
           </svg>
         </button>
       </div>
+      <!-- Filter Tabs -->
+      <div class="flex gap-1 mt-2">
+        <button
+          @click="activeFilter = 'all'"
+          :class="[
+            'flex-1 h-7 text-[12px] font-medium rounded-md transition-all duration-150',
+            activeFilter === 'all'
+              ? 'bg-accent text-white'
+              : 'bg-primary text-text-secondary hover:text-text-primary hover:bg-hover'
+          ]"
+        >
+          全部
+        </button>
+        <button
+          @click="activeFilter = 'text'"
+          :class="[
+            'flex-1 h-7 text-[12px] font-medium rounded-md transition-all duration-150',
+            activeFilter === 'text'
+              ? 'bg-accent text-white'
+              : 'bg-primary text-text-secondary hover:text-text-primary hover:bg-hover'
+          ]"
+        >
+          文字
+        </button>
+        <button
+          @click="activeFilter = 'image'"
+          :class="[
+            'flex-1 h-7 text-[12px] font-medium rounded-md transition-all duration-150',
+            activeFilter === 'image'
+              ? 'bg-accent text-white'
+              : 'bg-primary text-text-secondary hover:text-text-primary hover:bg-hover'
+          ]"
+        >
+          图片
+        </button>
+      </div>
     </div>
 
     <div ref="scrollContainer" class="flex-1 overflow-y-auto p-2 relative">
@@ -326,7 +387,7 @@ async function hideWindow() {
     </div>
 
     <footer class="px-4 py-2.5 text-center bg-secondary border-t border-border select-none">
-      <span class="text-[12px] text-muted">Cmd + Shift + V 快速打开</span>
+      <span class="text-[12px] text-muted">{{ shortcutText }} 快速打开</span>
     </footer>
   </div>
 </template>

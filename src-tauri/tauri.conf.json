@@ -19,12 +19,16 @@
         "decorations": true,
         "transparent": false,
         "alwaysOnTop": true,
-        "skipTaskbar": true,
+        "skipTaskbar": false,
         "center": true
       }
     ],
     "security": {
       "csp": null
+    },
+    "trayIcon": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true
     }
   },
   "bundle": {
@@ -63,6 +67,7 @@
         "languages": ["SimpChinese", "English"],
         "template": null
       }
-    }
+    },
+    "createUpdaterArtifacts": false
   }
 }

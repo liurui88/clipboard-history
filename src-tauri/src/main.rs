@@ -2,7 +2,11 @@
 
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
-use tauri::{Emitter, Manager};
+use std::path::PathBuf;
+use std::fs;
+use tauri::{Emitter, Manager, AppHandle, Listener};
+use tauri::tray::{TrayIconBuilder, TrayIconEvent};
+use tauri::menu::{Menu, MenuItem};
 use chrono::Local;
 use base64::{engine::general_purpose::STANDARD, Engine};
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
@@ -13,6 +17,40 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 #[cfg(target_os = "macos")]
 static PREVIOUS_APP_PID: AtomicU64 = AtomicU64::new(0);
+
+fn get_data_dir(app_handle: &AppHandle) -> PathBuf {
+    let mut path = app_handle.path().app_data_dir().unwrap_or_else(|_| {
+        std::env::current_dir().unwrap_or_default()
+    });
+    path.push("clipboard_history");
+    let _ = fs::create_dir_all(&path);
+    path
+}
+
+fn get_history_file_path(app_handle: &AppHandle) -> PathBuf {
+    let mut path = get_data_dir(app_handle);
+    path.push("history.json");
+    path
+}
+
+fn save_history_to_file(app_handle: &AppHandle, history: &Vec<ClipboardItem>) {
+    let file_path = get_history_file_path(app_handle);
+    if let Ok(json) = serde_json::to_string_pretty(history) {
+        let _ = fs::write(&file_path, json);
+    }
+}
+
+fn load_history_from_file(app_handle: &AppHandle) -> Vec<ClipboardItem> {
+    let file_path = get_history_file_path(app_handle);
+    if file_path.exists() {
+        if let Ok(content) = fs::read_to_string(&file_path) {
+            if let Ok(history) = serde_json::from_str::<Vec<ClipboardItem>>(&content) {
+                return history;
+            }
+        }
+    }
+    Vec::new()
+}
 
 // macOS native function to read image from clipboard (handles QQ's special format)
 #[cfg(target_os = "macos")]
@@ -95,23 +133,32 @@ fn get_clipboard_history(history: tauri::State<SharedHistory>) -> Vec<ClipboardI
 }
 
 #[tauri::command]
-fn clear_history(history: tauri::State<SharedHistory>) {
+fn clear_history(app_handle: AppHandle, history: tauri::State<SharedHistory>) {
     let mut h = history.lock().unwrap();
     h.clear();
+    let history_vec: Vec<ClipboardItem> = h.clone();
+    drop(h);
+    save_history_to_file(&app_handle, &history_vec);
 }
 
 #[tauri::command]
-fn delete_item(history: tauri::State<SharedHistory>, id: String) {
+fn delete_item(app_handle: AppHandle, history: tauri::State<SharedHistory>, id: String) {
     let mut h = history.lock().unwrap();
     h.retain(|item| item.id != id);
+    let history_vec: Vec<ClipboardItem> = h.clone();
+    drop(h);
+    save_history_to_file(&app_handle, &history_vec);
 }
 
 #[tauri::command]
-fn toggle_pin_item(history: tauri::State<SharedHistory>, id: String) {
+fn toggle_pin_item(app_handle: AppHandle, history: tauri::State<SharedHistory>, id: String) {
     let mut h = history.lock().unwrap();
     if let Some(item) = h.iter_mut().find(|item| item.id == id) {
         item.is_pinned = !item.is_pinned;
     }
+    let history_vec: Vec<ClipboardItem> = h.clone();
+    drop(h);
+    save_history_to_file(&app_handle, &history_vec);
 }
 
 #[cfg(target_os = "macos")]
@@ -215,12 +262,9 @@ fn paste_and_hide(window: tauri::Window) {
 }
 
 fn main() {
-    let history: SharedHistory = Arc::new(Mutex::new(Vec::new()));
-
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .manage(history.clone())
         .invoke_handler(tauri::generate_handler![
             get_clipboard_history,
             clear_history,
@@ -230,18 +274,31 @@ fn main() {
         ])
         .setup(move |app| {
             let app_handle = app.handle().clone();
-
+            
+            // Load history from file
+            let loaded_history = load_history_from_file(&app_handle);
+            let history: SharedHistory = Arc::new(Mutex::new(loaded_history));
+            
+            // Save empty history if file doesn't exist (first run)
             {
-                let mut h = history.lock().unwrap();
-                h.push(ClipboardItem {
-                    id: uuid::Uuid::new_v4().to_string(),
-                    content_type: ContentType::Text,
-                    content: "欢迎使用剪切板历史工具".to_string(),
-                    preview: "欢迎使用剪切板历史工具".to_string(),
-                    timestamp: Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
-                    is_pinned: false,
-                });
+                let h = history.lock().unwrap();
+                if h.is_empty() {
+                    drop(h);
+                    let mut h = history.lock().unwrap();
+                    h.push(ClipboardItem {
+                        id: uuid::Uuid::new_v4().to_string(),
+                        content_type: ContentType::Text,
+                        content: "欢迎使用剪切板历史工具".to_string(),
+                        preview: "欢迎使用剪切板历史工具".to_string(),
+                        timestamp: Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
+                        is_pinned: false,
+                    });
+                    save_history_to_file(&app_handle, &*h);
+                }
             }
+
+            // Register history as Tauri state
+            app.manage(history.clone());
 
             #[cfg(target_os = "macos")]
             std::thread::spawn(move || {
@@ -304,8 +361,11 @@ fn main() {
                                 if h.len() > 100 {
                                     h.truncate(100);
                                 }
-
+                                
+                                // Save to file
+                                let history_vec: Vec<ClipboardItem> = h.clone();
                                 drop(h);
+                                save_history_to_file(&app_handle_for_thread, &history_vec);
 
                                 let _ = app_handle_for_thread.emit("clipboard-updated", ());
                             }
@@ -366,7 +426,10 @@ fn main() {
                                     h.truncate(100);
                                 }
 
+                                // Save to file
+                                let history_vec: Vec<ClipboardItem> = h.clone();
                                 drop(h);
+                                save_history_to_file(&app_handle_for_thread, &history_vec);
 
                                 let _ = app_handle_for_thread.emit("clipboard-updated", ());
                             }
@@ -432,7 +495,10 @@ fn main() {
                                                 h.truncate(100);
                                             }
 
+                                            // Save to file
+                                            let history_vec: Vec<ClipboardItem> = h.clone();
                                             drop(h);
+                                            save_history_to_file(&app_handle_for_thread, &history_vec);
 
                                             let _ = app_handle_for_thread.emit("clipboard-updated", ());
                                         }
@@ -469,7 +535,10 @@ fn main() {
                                                         h.truncate(100);
                                                     }
 
+                                                    // Save to file
+                                                    let history_vec: Vec<ClipboardItem> = h.clone();
                                                     drop(h);
+                                                    save_history_to_file(&app_handle_for_thread, &history_vec);
 
                                                     let _ = app_handle_for_thread.emit("clipboard-updated", ());
                                                 }
@@ -507,18 +576,55 @@ fn main() {
 
             if let Err(_) = app.global_shortcut().on_shortcut("CommandOrControl+Shift+V", handler) {}
 
-            if let Some(window) = app.get_webview_window("main") {
-                let window_clone = window.clone();
-                window.on_window_event(move |event| {
-                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                        api.prevent_close();
-                        let _ = window_clone.hide();
+            // Setup tray icon and menu
+            let quit_i = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
+            let show_i = MenuItem::with_id(app, "show", "显示", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
+
+            let tray_app_handle_for_menu = app.handle().clone();
+            let tray_app_handle_for_icon = app.handle().clone();
+            let _tray = TrayIconBuilder::with_id("tray")
+                .menu(&menu)
+                .on_menu_event(move |_app, event| {
+                    let tray_handle = tray_app_handle_for_menu.clone();
+                    if event.id.as_ref() == "quit" {
+                        tray_handle.exit(0);
+                    } else if event.id.as_ref() == "show" {
+                        if let Some(window) = tray_handle.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
                     }
-                });
-            }
+                })
+                .on_tray_icon_event(move |_tray, event| {
+                    if let TrayIconEvent::DoubleClick { .. } = event {
+                        let tray_handle = tray_app_handle_for_icon.clone();
+                        if let Some(window) = tray_handle.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                })
+                .build(app)?;
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+        })
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app_handle, event| {
+            // Handle macOS app reactivation (when clicking dock icon)
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Reopen { .. } = event {
+                if let Some(window) = _app_handle.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+        });
 }
