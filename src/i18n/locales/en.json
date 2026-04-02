@@ -1,0 +1,116 @@
+{
+  "app": {
+    "name": "Clipboard History",
+    "title": "Clipboard History"
+  },
+  "menu": {
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "clipboard": "Clipboard",
+      "history": "History",
+      "general": "General",
+      "shortcut": "Shortcuts",
+      "backup": "Backup",
+      "about": "About"
+    }
+  },
+  "clipboardSettings": {
+    "title": "Clipboard",
+    "windowPosition": "Window Position",
+    "windowPositionOptions": {
+      "remember": "Remember Position",
+      "center": "Center",
+      "last": "Last Position"
+    },
+    "copySound": "Copy Sound",
+    "copySoundDesc": "Play sound when copying",
+    "searchBox": "Search Box",
+    "searchPosition": "Search Box Position",
+    "searchPositionOptions": {
+      "top": "Top",
+      "bottom": "Bottom"
+    },
+    "autoFocus": "Auto-focus Search Box",
+    "autoClear": "Auto-clear Search"
+  },
+  "historySettings": {
+    "title": "History",
+    "retention": "Retention Period",
+    "retentionDesc": "Number of days to keep history (0 = forever)",
+    "retentionDays": "days",
+    "clearHistory": "Clear History",
+    "clearHistoryDesc": "Clear all history records. This action cannot be undone.",
+    "clearButton": "Clear Now",
+    "clearing": "Clearing...",
+    "clearSuccess": "History cleared",
+    "confirmClear": "Are you sure you want to clear all history? This action cannot be undone.",
+    "days": "days"
+  },
+  "generalSettings": {
+    "title": "General Settings",
+    "permissions": "Permissions",
+    "accessibility": "Accessibility Access",
+    "accessibilityDesc": "Required to access clipboard content",
+    "diskAccess": "Full Disk Access",
+    "diskAccessDesc": "Required for file preview functionality",
+    "authorized": "Authorized",
+    "authorize": "Authorize",
+    "appSettings": "App Settings",
+    "loginStart": "Start at Login",
+    "autoCheckUpdate": "Auto Check for Updates",
+    "appearance": "Appearance",
+    "language": "Language",
+    "theme": "Theme",
+    "themeOptions": {
+      "auto": "System",
+      "light": "Light",
+      "dark": "Dark"
+    }
+  },
+  "shortcutSettings": {
+    "title": "Shortcuts",
+    "openClipboard": "Open Clipboard Window",
+    "openSettings": "Open Settings Window",
+    "recording": "Press shortcut...",
+    "instruction": "Click the shortcut button and press your desired key combination.",
+    "supportedKeys": "Supported modifiers: ⌘/Ctrl, ⇧/Shift, ⌥/Alt"
+  },
+  "backupSettings": {
+    "title": "Data Backup",
+    "export": "Export Data",
+    "exportDesc": "Export clipboard history to file",
+    "exportButton": "Export",
+    "exporting": "Exporting...",
+    "import": "Import Data",
+    "importDesc": "Import clipboard history from file",
+    "importButton": "Import",
+    "importing": "Importing...",
+    "importTitle": "Import Data",
+    "importInstruction": "Select file or paste JSON data:",
+    "importPlaceholder": "Paste JSON data...",
+    "cancel": "Cancel",
+    "confirmImport": "Confirm Import",
+    "exportSuccess": "Data exported successfully",
+    "importSuccess": "Data imported successfully",
+    "exportError": "Export failed",
+    "importError": "Import failed: Invalid data format",
+    "emptyImport": "Please enter data to import"
+  },
+  "aboutSettings": {
+    "title": "About",
+    "description": "A simple and efficient clipboard history manager that helps you easily manage and quickly access clipboard content.",
+    "copyright": "© 2024 Clipboard History. All rights reserved."
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "success": "Success",
+    "error": "Error",
+    "loading": "Loading..."
+  }
+}

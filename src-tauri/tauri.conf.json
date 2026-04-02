@@ -11,7 +11,8 @@
   "app": {
     "windows": [
       {
-        "title": "Clipboard History",
+        "label": "main",
+        "title": "剪贴板历史",
         "width": 400,
         "height": 500,
         "resizable": true,
@@ -21,6 +22,20 @@
         "alwaysOnTop": true,
         "skipTaskbar": false,
         "center": true
+      },
+      {
+        "label": "settings",
+        "title": "设置",
+        "width": 700,
+        "height": 500,
+        "resizable": true,
+        "visible": false,
+        "decorations": true,
+        "transparent": false,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "center": true,
+        "url": "index.html?page=settings"
       }
     ],
     "security": {

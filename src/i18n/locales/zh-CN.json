@@ -1,0 +1,116 @@
+{
+  "app": {
+    "name": "剪贴板历史",
+    "title": "Clipboard History"
+  },
+  "menu": {
+    "settings": "设置"
+  },
+  "settings": {
+    "title": "设置",
+    "tabs": {
+      "clipboard": "剪贴板",
+      "history": "历史记录",
+      "general": "通用设置",
+      "shortcut": "快捷键",
+      "backup": "数据备份",
+      "about": "关于"
+    }
+  },
+  "clipboardSettings": {
+    "title": "剪贴板",
+    "windowPosition": "窗口位置",
+    "windowPositionOptions": {
+      "remember": "记住位置",
+      "center": "居中显示",
+      "last": "上次位置"
+    },
+    "copySound": "复制音效",
+    "copySoundDesc": "复制时播放音效",
+    "searchBox": "搜索框",
+    "searchPosition": "搜索框位置",
+    "searchPositionOptions": {
+      "top": "顶部",
+      "bottom": "底部"
+    },
+    "autoFocus": "默认聚焦搜索框",
+    "autoClear": "自动清除搜索词"
+  },
+  "historySettings": {
+    "title": "历史记录",
+    "retention": "保留时长",
+    "retentionDesc": "历史记录的保留天数（0表示永久保留）",
+    "retentionDays": "天",
+    "clearHistory": "清除历史记录",
+    "clearHistoryDesc": "清除所有历史记录，此操作不可恢复",
+    "clearButton": "立即清除",
+    "clearing": "清除中...",
+    "clearSuccess": "历史记录已清除",
+    "confirmClear": "确定要清除所有历史记录吗？此操作不可恢复。",
+    "days": "天"
+  },
+  "generalSettings": {
+    "title": "通用设置",
+    "permissions": "权限设置",
+    "accessibility": "辅助功能访问权限",
+    "accessibilityDesc": "需要无障碍访问权限来操作剪切板内容",
+    "diskAccess": "完全磁盘访问权限",
+    "diskAccessDesc": "需要完全磁盘访问权限来实现文件预览",
+    "authorized": "已授权",
+    "authorize": "去授权",
+    "appSettings": "应用设置",
+    "loginStart": "登录时启动",
+    "autoCheckUpdate": "自动检查更新",
+    "appearance": "外观设置",
+    "language": "界面语言",
+    "theme": "主题模式",
+    "themeOptions": {
+      "auto": "跟随系统",
+      "light": "浅色",
+      "dark": "深色"
+    }
+  },
+  "shortcutSettings": {
+    "title": "快捷键",
+    "openClipboard": "打开剪贴板窗口",
+    "openSettings": "打开偏好设置窗口",
+    "recording": "按下快捷键...",
+    "instruction": "点击快捷键按钮，然后按下想要的组合键即可设置。",
+    "supportedKeys": "支持的修饰键：⌘/Ctrl、⇧/Shift、⌥/Alt"
+  },
+  "backupSettings": {
+    "title": "数据备份",
+    "export": "导出数据",
+    "exportDesc": "将剪贴板历史导出到文件",
+    "exportButton": "导出",
+    "exporting": "导出中...",
+    "import": "导入数据",
+    "importDesc": "从文件导入剪贴板历史",
+    "importButton": "导入",
+    "importing": "导入中...",
+    "importTitle": "导入数据",
+    "importInstruction": "选择文件或粘贴 JSON 数据：",
+    "importPlaceholder": "粘贴 JSON 数据...",
+    "cancel": "取消",
+    "confirmImport": "确认导入",
+    "exportSuccess": "数据导出成功",
+    "importSuccess": "数据导入成功",
+    "exportError": "导出失败",
+    "importError": "导入失败：数据格式错误",
+    "emptyImport": "请输入要导入的数据"
+  },
+  "aboutSettings": {
+    "title": "关于",
+    "description": "一款简洁高效的剪贴板历史管理工具，帮助您轻松管理和快速访问剪贴板内容。",
+    "copyright": "© 2024 Clipboard History. All rights reserved."
+  },
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "close": "关闭",
+    "success": "成功",
+    "error": "错误",
+    "loading": "加载中..."
+  }
+}

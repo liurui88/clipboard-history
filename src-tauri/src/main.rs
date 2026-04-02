@@ -92,16 +92,18 @@ fn read_macos_clipboard_image() -> Option<Vec<u8>> {
             }
         }
         
-        let png_type = std::ffi::CString::new("public.png").unwrap();
-        let nsstring_class = class!(NSString);
-        let png_type_ns: id = msg_send![nsstring_class, stringWithUTF8String:png_type.as_ptr()];
-        
-        let data: id = msg_send![pasteboard, dataForType:png_type_ns];
-        if data != nil {
-            let length: usize = msg_send![data, length];
-            let bytes: *const u8 = msg_send![data, bytes];
-            if !bytes.is_null() && length > 0 {
-                return Some(std::slice::from_raw_parts(bytes, length).to_vec());
+        // Try to get PNG data from pasteboard
+        if let Ok(png_type) = std::ffi::CString::new("public.png") {
+            let nsstring_class = class!(NSString);
+            let png_type_ns: id = msg_send![nsstring_class, stringWithUTF8String:png_type.as_ptr()];
+            
+            let data: id = msg_send![pasteboard, dataForType:png_type_ns];
+            if data != nil {
+                let length: usize = msg_send![data, length];
+                let bytes: *const u8 = msg_send![data, bytes];
+                if !bytes.is_null() && length > 0 {
+                    return Some(std::slice::from_raw_parts(bytes, length).to_vec());
+                }
             }
         }
         
@@ -321,14 +323,21 @@ fn main() {
             std::thread::spawn(move || {
                 let mut last_text = String::new();
                 let mut last_image_hash: Option<u64> = None;
+                let mut consecutive_errors = 0u32;
 
                 loop {
                     std::thread::sleep(std::time::Duration::from_millis(500));
+
+                    // Reset error counter periodically
+                    if consecutive_errors > 0 && consecutive_errors % 10 == 0 {
+                        std::thread::sleep(std::time::Duration::from_secs(1));
+                    }
 
                     let clipboard = app_handle_for_thread.clipboard();
 
                     match clipboard.read_text() {
                         Ok(text_content) => {
+                            consecutive_errors = 0;
                             if text_content != last_text && !text_content.is_empty() {
                                 last_text = text_content.clone();
                                 last_image_hash = None;
@@ -370,13 +379,19 @@ fn main() {
                                 let _ = app_handle_for_thread.emit("clipboard-updated", ());
                             }
                         }
-                        _ => {}
+                        Err(e) => {
+                            consecutive_errors += 1;
+                            if consecutive_errors <= 3 {
+                                eprintln!("Clipboard read_text error ({}): {:?}", consecutive_errors, e);
+                            }
+                        }
                     }
 
                     let mut image_found = false;
                     let clipboard = app_handle_for_thread.clipboard();
                     match clipboard.read_image() {
                         Ok(image) => {
+                            consecutive_errors = 0;
                             image_found = true;
                             use std::collections::hash_map::DefaultHasher;
                             use std::hash::{Hash, Hasher};
@@ -578,8 +593,8 @@ fn main() {
 
             // Setup tray icon and menu
             let quit_i = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
-            let show_i = MenuItem::with_id(app, "show", "显示", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
+            let settings_i = MenuItem::with_id(app, "settings", "设置", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&settings_i, &quit_i])?;
 
             let tray_app_handle_for_menu = app.handle().clone();
             let tray_app_handle_for_icon = app.handle().clone();
@@ -589,10 +604,12 @@ fn main() {
                     let tray_handle = tray_app_handle_for_menu.clone();
                     if event.id.as_ref() == "quit" {
                         tray_handle.exit(0);
-                    } else if event.id.as_ref() == "show" {
-                        if let Some(window) = tray_handle.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
+                    } else if event.id.as_ref() == "settings" {
+                        // Open settings window
+                        if let Some(settings_window) = tray_handle.get_webview_window("settings") {
+                            let _ = settings_window.show();
+                            let _ = settings_window.set_focus();
+                            let _ = settings_window.center();
                         }
                     }
                 })
