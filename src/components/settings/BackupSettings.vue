@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useI18n } from 'vue-i18n'
+import { save } from '@tauri-apps/plugin-dialog'
+import { writeTextFile } from '@tauri-apps/plugin-fs'
 
 const { t } = useI18n()
 
@@ -11,6 +13,17 @@ const message = ref('')
 const messageType = ref<'success' | 'error'>('success')
 const importContent = ref('')
 const showImportDialog = ref(false)
+
+function showImport() {
+  showImportDialog.value = true
+  importContent.value = ''
+  message.value = ''
+}
+
+function cancelImport() {
+  showImportDialog.value = false
+  importContent.value = ''
+}
 
 async function exportData() {
   isExporting.value = true
@@ -23,16 +36,26 @@ async function exportData() {
     // Convert to JSON string
     const data = JSON.stringify(history, null, 2)
 
-    // Create blob and download
-    const blob = new Blob([data], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `clipboard-backup-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    // Open save dialog
+    const defaultFileName = `clipboard-backup-${new Date().toISOString().split('T')[0]}.json`
+    const filePath = await save({
+      filters: [
+        {
+          name: 'JSON Files',
+          extensions: ['json']
+        }
+      ],
+      defaultPath: defaultFileName,
+    })
+
+    if (!filePath) {
+      // User cancelled the dialog
+      isExporting.value = false
+      return
+    }
+
+    // Write file using Tauri FS API
+    await writeTextFile(filePath, data)
 
     message.value = t('backupSettings.exportSuccess')
     messageType.value = 'success'
@@ -46,17 +69,6 @@ async function exportData() {
       message.value = ''
     }, 3000)
   }
-}
-
-function showImport() {
-  showImportDialog.value = true
-  importContent.value = ''
-  message.value = ''
-}
-
-function cancelImport() {
-  showImportDialog.value = false
-  importContent.value = ''
 }
 
 async function confirmImport() {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
+import { emit as emitTauri } from '@tauri-apps/api/event'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -15,6 +16,7 @@ const settings = ref<HistorySettings>({
 
 const isClearing = ref(false)
 const showClearSuccess = ref(false)
+const showConfirmDialog = ref(false)
 
 const emit = defineEmits<{
   save: [settings: HistorySettings]
@@ -47,14 +49,22 @@ function updateRetentionDays(days: number) {
   saveSettings()
 }
 
-async function clearHistory() {
-  if (!confirm(t('historySettings.confirmClear'))) {
-    return
-  }
+function openClearConfirm() {
+  showConfirmDialog.value = true
+}
 
+function cancelClear() {
+  showConfirmDialog.value = false
+}
+
+async function confirmClear() {
+  showConfirmDialog.value = false
   isClearing.value = true
+
   try {
     await invoke('clear_history')
+    // 发送事件通知剪贴板历史页面刷新
+    await emitTauri('history-cleared', {})
     showClearSuccess.value = true
     setTimeout(() => {
       showClearSuccess.value = false
@@ -98,7 +108,7 @@ async function clearHistory() {
           </div>
         </div>
         <button
-          @click="clearHistory"
+          @click="openClearConfirm"
           :disabled="isClearing"
           class="w-full py-2.5 text-[14px] font-medium text-[#ff453a] border border-[#ff453a] rounded-lg hover:bg-[#ff453a]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -108,6 +118,28 @@ async function clearHistory() {
 
       <div v-if="showClearSuccess" class="text-center">
         <span class="text-[13px] text-[#30d158]">{{ t('historySettings.clearSuccess') }}</span>
+      </div>
+    </div>
+
+    <!-- 自定义确认对话框 -->
+    <div v-if="showConfirmDialog" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0;">
+      <div class="bg-white dark:bg-[#232328] rounded-xl p-6 shadow-xl max-w-sm mx-4 w-full">
+        <h4 class="text-[16px] font-semibold text-gray-900 dark:text-gray-100 mb-3">{{ t('historySettings.confirmClearTitle') }}</h4>
+        <p class="text-[13px] text-gray-600 dark:text-gray-400 mb-6">{{ t('historySettings.confirmClear') }}</p>
+        <div class="flex gap-3">
+          <button
+            @click="cancelClear"
+            class="flex-1 px-4 py-2.5 text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-[#1a1a1e] rounded-lg hover:bg-gray-200 dark:hover:bg-[#2d2d33] transition-colors"
+          >
+            {{ t('common.cancel') }}
+          </button>
+          <button
+            @click="confirmClear"
+            class="flex-1 px-4 py-2.5 text-[13px] font-medium text-white bg-[#ff453a] rounded-lg hover:bg-[#ff453a]/90 transition-colors"
+          >
+            {{ t('common.confirm') }}
+          </button>
+        </div>
       </div>
     </div>
   </div>

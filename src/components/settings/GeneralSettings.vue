@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { emit } from '@tauri-apps/api/event'
 
 const { t, locale } = useI18n()
 
@@ -23,7 +24,7 @@ const permissions = ref({
   diskAccess: true
 })
 
-const emit = defineEmits<{
+const emitLocal = defineEmits<{
   save: [settings: GeneralSettings]
   themeChange: [theme: 'auto' | 'light' | 'dark']
 }>()
@@ -49,10 +50,10 @@ function loadSettings() {
 
 function saveSettings() {
   localStorage.setItem('general-settings', JSON.stringify(settings.value))
-  emit('save', settings.value)
+  emitLocal('save', settings.value)
 }
 
-function updateSetting<K extends keyof GeneralSettings>(
+async function updateSetting<K extends keyof GeneralSettings>(
   key: K,
   value: GeneralSettings[K]
 ) {
@@ -60,11 +61,17 @@ function updateSetting<K extends keyof GeneralSettings>(
   saveSettings()
 
   if (key === 'theme') {
-    emit('themeChange', value as 'auto' | 'light' | 'dark')
+    const themeValue = value as 'auto' | 'light' | 'dark'
+    emitLocal('themeChange', themeValue)
+    // 广播主题变化事件到其他窗口
+    await emit('theme-changed', { theme: themeValue })
   }
 
   if (key === 'language') {
-    locale.value = value as string
+    const langValue = value as string
+    locale.value = langValue
+    // 广播语言变化事件到其他窗口
+    await emit('language-changed', { language: langValue })
   }
 }
 

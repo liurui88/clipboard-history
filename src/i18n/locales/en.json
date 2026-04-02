@@ -47,6 +47,7 @@
     "clearing": "Clearing...",
     "clearSuccess": "History cleared",
     "confirmClear": "Are you sure you want to clear all history? This action cannot be undone.",
+    "confirmClearTitle": "Confirm Clear",
     "days": "days"
   },
   "generalSettings": {
@@ -97,11 +98,13 @@
     "importSuccess": "Data imported successfully",
     "exportError": "Export failed",
     "importError": "Import failed: Invalid data format",
-    "emptyImport": "Please enter data to import"
+    "emptyImport": "Please enter data to import",
+    "confirmExport": "Are you sure you want to export data?",
+    "exportLocation": "Export file will be saved to: {path}"
   },
   "aboutSettings": {
     "title": "About",
-    "description": "A simple and efficient clipboard history manager that helps you easily manage and quickly access clipboard content.",
+    "description": "A simple and efficient clipboard history management tool that helps you easily manage and quickly access clipboard content.",
     "copyright": "© 2024 Clipboard History. All rights reserved."
   },
   "common": {
@@ -111,6 +114,21 @@
     "close": "Close",
     "success": "Success",
     "error": "Error",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "all": "All",
+    "text": "Text",
+    "image": "Image",
+    "copy": "Copy",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "delete": "Delete",
+    "copied": "Copied",
+    "scrollTop": "Scroll to Top",
+    "quickOpen": "Quick Open",
+    "noMatch": "No matching content found",
+    "noRecords": "No clipboard records",
+    "tryOther": "Try other keywords",
+    "autoRecord": "Records will be automatically created when you copy text or images",
+    "version": "Version"
   }
 }

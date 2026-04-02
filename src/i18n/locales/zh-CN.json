@@ -47,6 +47,7 @@
     "clearing": "清除中...",
     "clearSuccess": "历史记录已清除",
     "confirmClear": "确定要清除所有历史记录吗？此操作不可恢复。",
+    "confirmClearTitle": "确认清除",
     "days": "天"
   },
   "generalSettings": {
@@ -97,7 +98,9 @@
     "importSuccess": "数据导入成功",
     "exportError": "导出失败",
     "importError": "导入失败：数据格式错误",
-    "emptyImport": "请输入要导入的数据"
+    "emptyImport": "请输入要导入的数据",
+    "confirmExport": "确定要导出数据吗？",
+    "exportLocation": "导出文件将保存到：{path}"
   },
   "aboutSettings": {
     "title": "关于",
@@ -111,6 +114,21 @@
     "close": "关闭",
     "success": "成功",
     "error": "错误",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "all": "全部",
+    "text": "文字",
+    "image": "图片",
+    "copy": "复制",
+    "pin": "固定",
+    "unpin": "取消固定",
+    "delete": "删除",
+    "copied": "已复制",
+    "scrollTop": "滚动到顶部",
+    "quickOpen": "快速打开",
+    "noMatch": "未找到匹配的内容",
+    "noRecords": "暂无剪切板记录",
+    "tryOther": "尝试其他关键词",
+    "autoRecord": "复制文字或图片后会自动记录",
+    "version": "版本"
   }
 }

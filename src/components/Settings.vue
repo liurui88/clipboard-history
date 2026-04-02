@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ClipboardSettings from './settings/ClipboardSettings.vue'
 import HistorySettings from './settings/HistorySettings.vue'
@@ -14,14 +14,14 @@ type SettingTab = 'clipboard' | 'history' | 'general' | 'shortcut' | 'backup' | 
 
 const activeTab = ref<SettingTab>('clipboard')
 
-const tabs = [
+const tabs = computed(() => [
   { id: 'clipboard' as SettingTab, label: t('settings.tabs.clipboard'), icon: 'clipboard' },
   { id: 'history' as SettingTab, label: t('settings.tabs.history'), icon: 'history' },
   { id: 'general' as SettingTab, label: t('settings.tabs.general'), icon: 'settings' },
   { id: 'shortcut' as SettingTab, label: t('settings.tabs.shortcut'), icon: 'keyboard' },
   { id: 'backup' as SettingTab, label: t('settings.tabs.backup'), icon: 'backup' },
   { id: 'about' as SettingTab, label: t('settings.tabs.about'), icon: 'info' },
-]
+])
 
 // 初始化主题
 onMounted(() => {
